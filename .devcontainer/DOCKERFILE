@@ -16,14 +16,14 @@ RUN groupadd --gid $USER_GID $USERNAME \
     
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y python3-pip
-RUN pip install setuptools==58.2.0
-RUN pip install opencv-python
-RUN pip install tensorflow==2.12.0
-RUN pip install torch
-RUN pip install torchvision
-RUN pip install tqdm
-RUN pip install Pillow
-RUN pip install tensorrt
+RUN pip install --no-cache-dir --upgrade setuptools==58.2.0
+RUN pip install --no-cache-dir --upgrade opencv-python
+RUN pip install --no-cache-dir --upgrade tensorflow==2.12.0
+RUN pip install --no-cache-dir --upgrade torch
+RUN pip install --no-cache-dir --upgrade torchvision
+RUN pip install --no-cache-dir --upgrade tqdm
+RUN pip install --no-cache-dir --upgrade Pillow
+RUN pip install --no-cache-dir --upgrade tensorrt
 ENV SHELL /bin/bash
 RUN echo "export DISPLAY=unix:0" >> /etc/bash.bashrc
 
@@ -33,4 +33,6 @@ RUN echo "export DISPLAY=unix:0" >> /etc/bash.bashrc
 
 # [Optional] Set the default user. Omit if you want to keep the default as root.
 USER $USERNAME
+
+
 CMD ["/bin/bash"]
