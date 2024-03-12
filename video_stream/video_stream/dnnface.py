@@ -83,8 +83,7 @@ class FaceDetectionNode(Node):
     
     def get_expression_label(self, image):
         
-        class_labels = ['neutral', 'happiness', 'surprise', 'sadness', 'anger', 'disgust', 'fear', 'contempt']
-
+        class_labels = ['Neutral', 'Happy', 'Sad', 'Surprise', 'Fear', 'Disgust', 'Angry'] 
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model_path = "/home/server/ros2_ws/src/video_stream/video_stream/ferPlus.pth"
         model = DDAMNet(num_class=8,num_head=2,pretrained=False)

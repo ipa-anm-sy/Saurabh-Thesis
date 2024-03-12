@@ -37,4 +37,4 @@
         "source=${localWorkspaceFolder}/../log,target=/home/ros2_ws/log,type=bind"
     ],
     "postCreateCommand": "sudo apt update && sudo rosdep update && sudo rosdep install --from-paths src --ignore-src -y && sudo chown -R server /home/ros2_ws/ && sudo apt install python3-colcon-clean ros-humble-ros2controlcli"
-}s
+}
