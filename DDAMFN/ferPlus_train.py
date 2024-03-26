@@ -1,32 +1,27 @@
 import os
 import sys
-
 from tqdm import tqdm
 import argparse
-
 from PIL import Image
 import numpy as np
 import pandas as pd
-
 import torch
 import torch.nn as nn
 import torch.utils.data as data
 from torchvision import transforms, datasets
-
-
 from sklearn.metrics import balanced_accuracy_score
 import matplotlib.pyplot as plt
 import itertools
-
 from networks.DDAM import DDAMNet
 import torch.nn.functional as F
 from sklearn.metrics import confusion_matrix
-
+from torchvision.datasets import DatasetFolder
+from torchvision.datasets.folder import default_loader
 eps = sys.float_info.epsilon
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--fer_path', type=str, default='/home/server/ros2_ws/src/DDAMFN/data/ferPlus', help='ferPlus-DB dataset path.')
+    parser.add_argument('--fer_path', type=str, default='/home/server/ros2_ws/src/DDAMFN/ferplus/Labels', help='ferPlus-DB dataset path.')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size.')
     parser.add_argument('--lr', type=float, default=0.01, help='Initial learning rate for sgd.')
     parser.add_argument('--workers', default=8, type=int, help='Number of data loading workers.')
@@ -55,7 +50,15 @@ class AttentionLoss(nn.Module):
         else:
             loss = 0
         return loss
-  
+def custom_loader(path):
+    
+    image = default_loader(path)
+   
+    
+    label = int(os.path.basename(path).split('.')[0])  
+    return image, label  
+
+
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
@@ -102,7 +105,7 @@ def run_training():
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.enabled = True
 
-    model = DDAMNet(num_class=8,num_head=args.num_head)
+    model = DDAMNet(num_class=8,num_head=args.num_head,pretrained=False)
     model.to(device)
 
     data_transforms = transforms.Compose([
@@ -121,10 +124,14 @@ def run_training():
         ])         
      
 
-    train_dataset = datasets.ImageFolder(f'{args.fer_path}/train', transform = data_transforms)   
+    #train_dataset = datasets.ImageFolder(f'{args.fer_path}/FER2013Train', transform = data_transforms)   
     
+   
+    data_dir = '/home/server/ros2_ws/src/DDAMFN/ferplus/Labels/FER2013Train'
+    label_csv = os.path.join(data_dir, 'label.csv')
+    label_df = pd.read_csv(label_csv, header=None, names=['filename', 'bbox', 'label', 'other_columns'])
+    train_dataset = DatasetFolder(root=data_dir, loader=custom_loader, extensions='.png', transform=data_transforms)
     print('Whole train set size:', train_dataset.__len__())
-
     train_loader = torch.utils.data.DataLoader(train_dataset,
                                                batch_size = args.batch_size,
                                                num_workers = args.workers,
@@ -138,7 +145,7 @@ def run_training():
                                  std=[0.229, 0.224, 0.225])])   
 
   
-    val_dataset = datasets.ImageFolder(f'{args.fer_path}/test', transform = data_transforms_val)    
+    val_dataset = datasets.ImageFolder(f'{args.fer_path}/FER2013Valid', transform = data_transforms_val)    
 
     print('Validation set size:', val_dataset.__len__())
     

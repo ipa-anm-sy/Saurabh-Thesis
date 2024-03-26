@@ -20,8 +20,8 @@ eps = sys.float_info.epsilon
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--raf_path', type=str, default='/data/rafdb/', help='Raf-DB dataset path.')
-    parser.add_argument('--batch_size', type=int, default=256, help='Batch size.')
+    parser.add_argument('--raf_path', type=str, default='/home/server/ros2_ws/src/DDAMFN/archive/DATASET', help='Raf-DB dataset path.')
+    parser.add_argument('--batch_size', type=int, default=32, help='Batch size.')
     parser.add_argument('--lr', type=float, default=0.01, help='Initial learning rate for sgd.')
     parser.add_argument('--workers', default=4, type=int, help='Number of data loading workers.')
     parser.add_argument('--epochs', type=int, default=40, help='Total training epochs.')
@@ -82,7 +82,7 @@ def plot_confusion_matrix(cm, classes,
     plt.xlabel('Predicted', fontsize=18)
     plt.tight_layout()
 
-class_names = ['Neutral', 'Happy', 'Sad', 'Surprise', 'Fear', 'Disgust', 'Angry']  
+class_names = ['Surprise','Fear', 'Disgust','Happy', 'Sad', 'Angry', 'Neutral']  
 def run_training():
     args = parse_args()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -124,7 +124,7 @@ def run_training():
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])])   
   
-    val_dataset = datasets.ImageFolder(f'{args.raf_path}/val', transform = data_transforms_val)    
+    val_dataset = datasets.ImageFolder(f'{args.raf_path}/test', transform = data_transforms_val)    
 
     print('Validation set size:', val_dataset.__len__())
     
@@ -221,11 +221,11 @@ def run_training():
             tqdm.write("[Epoch %d] Validation accuracy:%.4f. bacc:%.4f. Loss:%.3f" % (epoch, acc, balanced_acc, running_loss))
             tqdm.write("best_acc:" + str(best_acc))
 
-            if acc > 0.91 and acc == best_acc:
+            if acc > 0.87 and acc == best_acc:
                 torch.save({'iter': epoch,
                             'model_state_dict': model.state_dict(),
                              'optimizer_state_dict': optimizer.state_dict(),},
-                            os.path.join('checkpoints', "rafdb_epoch"+str(epoch)+"_acc"+str(acc)+"_bacc"+str(balanced_acc)+".pth"))
+                            os.path.join('/home/server/ros2_ws/src/DDAMFN/checkpoints', "rafdb_epoch"+str(epoch)+"_acc"+str(acc)+"_bacc"+str(balanced_acc)+".pth"))
                 tqdm.write('Model saved.')
                 
                 # Compute confusion matrix
@@ -235,7 +235,7 @@ def run_training():
                 # Plot normalized confusion matrix
                 plot_confusion_matrix(matrix, classes=class_names, normalize=True, title= 'RAF-DB Confusion Matrix (acc: %0.2f%%)' %(acc*100))
                  
-                plt.savefig(os.path.join('checkpoints', "rafdb_epoch"+str(epoch)+"_acc"+str(acc)+"_bacc"+str(balanced_acc)+".png"))
+                plt.savefig(os.path.join('/home/server/ros2_ws/src/DDAMFN/checkpoints', "rafdb_epoch"+str(epoch)+"_acc"+str(acc)+"_bacc"+str(balanced_acc)+".png"))
                 plt.close()
         
 if __name__ == "__main__":        

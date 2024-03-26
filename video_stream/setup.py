@@ -27,6 +27,7 @@ setup(
         'facedetection = video_stream.face_detect:main',
         'dnnface = video_stream.dnnface:main',
         'pattlite= video_stream.pattlite:main',
+        'rafdb_ddamfn= video_stream.rafdb_ddamfn:main',
         ],
     },
 )
