@@ -10,6 +10,7 @@ import cv2
 from cv_bridge import CvBridge
 import numpy as np
 import torch
+
 import torchvision.transforms as transforms
 from PIL import Image
 import time
@@ -44,15 +45,17 @@ class FaceDetectionNode(Node):
         except Exception as e:
             self.get_logger().error(f"error converting image:{e}")
             return
+        
         self.frame_count += 1
+        
         faces,cropped_faces = self.detect_and_crop_face(frame)
 
-        for (startX, startY, endX, endY) in faces:
-            cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2)
-
-        for i in cropped_faces:
+        for i, (startX, startY, endX, endY) in enumerate(faces):
+            face_img= cropped_faces[i]
+            label = self.get_expression_label(face_img)
             
-            label = self.get_expression_label(i)
+            cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2)  
+            
             cv2.putText(frame, label, (startX, startY - 10),
             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
