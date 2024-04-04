@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size.')
     parser.add_argument('--lr', type=float, default=0.01, help='Initial learning rate for sgd.')
     parser.add_argument('--workers', default=4, type=int, help='Number of data loading workers.')
-    parser.add_argument('--epochs', type=int, default=40, help='Total training epochs.')
+    parser.add_argument('--epochs', type=int, default=100, help='Total training epochs.')
     parser.add_argument('--num_head', type=int, default=2, help='Number of attention head.')
     return parser.parse_args()
 

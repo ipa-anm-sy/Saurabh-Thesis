@@ -64,6 +64,7 @@ class FaceDetectionNode(Node):
         cv2.putText(frame, fps_text, (frame.shape[1] - 150, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
 
         cv2.imshow('Detected Faces', frame)
+       
         cv2.waitKey(1)
 
 

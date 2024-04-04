@@ -29,6 +29,7 @@ setup(
         'pattlite= video_stream.pattlite:main',
         'rafdb_ddamfn= video_stream.rafdb_ddamfn:main',
         'rafdb_single= video_stream.rafdb_single:main',
+        'test_batch= video_stream.batch_test:main',
         ],
     },
 )

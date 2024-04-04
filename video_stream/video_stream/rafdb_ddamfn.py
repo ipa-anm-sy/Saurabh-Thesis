@@ -28,7 +28,7 @@ class FaceDetectionNode(Node):
         super().__init__('face_detection')
 
         qos_profile = QoSProfile(depth=10)
-        self.image_sub = self.create_subscription(sensor_msgs.Image, '/image_raw', self.detect_face_callback, qos_profile=qos_profile)
+        self.image_sub = self.create_subscription(sensor_msgs.Image, ' ', self.detect_face_callback, qos_profile=qos_profile)
        
         self.bridge = CvBridge()
 
@@ -43,19 +43,21 @@ class FaceDetectionNode(Node):
         
         
     def detect_face_callback(self, image):
-        try:
-            frame = self.bridge.imgmsg_to_cv2(image, "bgr8")
-        except Exception as e:
-            self.get_logger().error(f"error converting image:{e}")
-            return
+        
+        frame = self.bridge.imgmsg_to_cv2(image, "bgr8")
+        
         
         self.frame_count += 1
         self.frames.append(frame)
         
         if len(self.frames)==16:
-            faces,cropped_faces = self.detect_and_crop_face(self.frames)
+
+            #------------------------------------------------------------- Detecting and cropped faces----------------------------------------------------------
+            faces,cropped_faces = self.detect_and_crop_face(self.frames) 
+
+            #------------------------------------------------------------- Predicting expression----------------------------------------------------------------
             labels = self.get_expression_label(cropped_faces)
-            
+            #------------------------------------------------------------- output with labels ------------------------------------------------------------------
             for frame, face_locations, label_list in zip(self.frames, faces, labels):
                 
                 for (startX, startY, endX, endY), label in zip(face_locations, label_list):
@@ -70,6 +72,7 @@ class FaceDetectionNode(Node):
                 if fps!=0.0:
                     cv2.putText(frame, fps_text, (frame.shape[1] - 150, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
                 cv2.imshow('Detected Faces', frame)
+                
                 cv2.waitKey(delay=2)
             
             self.frames =[]
@@ -121,7 +124,7 @@ class FaceDetectionNode(Node):
         class_labels = ['Surprise','Fear', 'Disgust','Happy', 'Sad', 'Angry', 'Neutral']  
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model_path = "/home/server/ros2_ws/src/video_stream/video_stream/rafdb.pth"
-        model = DDAMNet(num_class=7,num_head=2,pretrained=False)
+        model = DDAMNet(num_class=7,num_head=2,pretrained=False) # num_head is attention heads, it can be trained with changing the number to 3,4 or something else.
         checkpoint= torch.load(model_path, map_location=device)
         model.load_state_dict(checkpoint['model_state_dict'])
         model.to(device)
