@@ -5,6 +5,8 @@ import sensor_msgs.msg as sensor_msgs
 import cv2
 from cv_bridge import CvBridge
 import numpy as np
+import os
+
 
 class FaceDetectionNode(Node):
     def __init__(self):
@@ -12,39 +14,36 @@ class FaceDetectionNode(Node):
         qos_profile = QoSProfile(depth=10)
         self.image_sub = self.create_subscription(sensor_msgs.Image, '/image_raw', self.detect_face_callback, qos_profile= qos_profile)
         self.bridge = CvBridge()
+        model_dir= "/home/server/ros2_ws/src/video_stream/video_stream"
+        self.caffemodel = os.path.join(model_dir, "res10_300x300_ssd_iter_140000.caffemodel")#
+        self.prototxt = os.path.join(model_dir, "deploy.prototxt.txt")
+        self.net = cv2.dnn.readNetFromCaffe(self.prototxt, self.caffemodel)
 
-    def detect_face_callback(self, image):
-        try:
 
-            frame = self.bridge.imgmsg_to_cv2(image,"bgr8")
-
-        except Exception as e:
-
-            self.get_logger().error(f"error converting image:{e}")
-            return
+    def detect_face_callback(self, image):   
+        frame = self.bridge.imgmsg_to_cv2(image, "bgr8")
+        faces = self.detect_and_crop_face(frame)
+        cv2.imshow('Detected Faces', frame)
+        cv2.waitKey(1)
         
-        face = self.detect_and_crop_face(frame)
-
-        if face is not None:
-
-            x, y, w, h = self.face_coordinates
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-
-            cv2.imshow('Detected Face', frame)
-
-            cv2.waitKey(1)
-
-    def detect_and_crop_face(self, image):
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades+'haarcascade_frontalface_default.xml')
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray,1.3,5)
-
-        if len(faces) == 0:
-            return None
         
-        x, y, w, h = faces[0]
-        self.face_coordinates = (x, y, w, h)
-        face_roi = image[y:y+h, x:x+w]
+    def detect_and_crop_face(self, image):    
+        (h, w) = image.shape[:2]
+        blob = cv2.dnn.blobFromImage(cv2.resize(image, (300, 300)), 1.0, (300, 300), (104.0, 177.0, 123.0))
+        self.net.setInput(blob)
+        detections = self.net.forward()
+        faces = []
+        cropped_faces = []
+        for i in range(0, detections.shape[2]):
+            confidence = detections[0, 0, i, 2]
+            if confidence > 0.7:  
+                box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
+                (startX, startY, endX, endY) = box.astype("int")
+                face_roi = image[startY:endY, startX:endX]
+                faces.append((startX, startY, endX, endY))
+                cropped_faces.append(face_roi)
+                cv2.rectangle(image, (startX, startY), (endX, endY), (0, 255, 0), 2)
+        return faces, cropped_faces
 
 
         return face_roi

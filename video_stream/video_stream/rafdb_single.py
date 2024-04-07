@@ -1,5 +1,3 @@
-
-
 import os
 import sys
 import rclpy
@@ -35,6 +33,13 @@ class FaceDetectionNode(Node):
         self.caffemodel = os.path.join(model_dir, "res10_300x300_ssd_iter_140000.caffemodel")
         self.prototxt = os.path.join(model_dir, "deploy.prototxt.txt")
         self.net = cv2.dnn.readNetFromCaffe(self.prototxt, self.caffemodel)
+        self.class_labels = ['Surprise','Fear', 'Disgust','Happy', 'Sad', 'Angry', 'Neutral']  
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.model_path = "/home/server/ros2_ws/src/video_stream/video_stream/rafdb_8830.pth"
+        self.model = DDAMNet(num_class=7,num_head=2,pretrained=False)
+        self.checkpoint= torch.load(self.model_path, map_location=self.device)
+        self.model.load_state_dict(self.checkpoint['model_state_dict'])
+        self.model.to(self.device)
 
         self.frame_count = 0
         self.start_time = time.time()
@@ -105,14 +110,8 @@ class FaceDetectionNode(Node):
     
     def get_expression_label(self, image):
         
-        class_labels = ['Surprise','Fear', 'Disgust','Happy', 'Sad', 'Angry', 'Neutral']  
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        model_path = "/home/server/ros2_ws/src/video_stream/video_stream/rafdb.pth"
-        model = DDAMNet(num_class=7,num_head=2,pretrained=False)
-        checkpoint= torch.load(model_path, map_location=device)
-        model.load_state_dict(checkpoint['model_state_dict'])
-        model.to(device)
-        model.eval()
+     
+        self.model.eval()
 
            
         preprocess = transforms.Compose([
@@ -125,10 +124,10 @@ class FaceDetectionNode(Node):
         face_img = Image.fromarray(image)
         face_img = preprocess(face_img)
         face_img = face_img.unsqueeze(0)  
-        face_img = face_img.to(device)
+        face_img = face_img.to(self.device)
                         
         with torch.no_grad():
-            output = model(face_img)
+            output = self.model(face_img)
 
         
         if isinstance(output, tuple):
@@ -140,7 +139,7 @@ class FaceDetectionNode(Node):
 
         
 
-        expression_label = class_labels[predicted.item()]
+        expression_label = self.class_labels[predicted.item()]
 
         return expression_label
         
