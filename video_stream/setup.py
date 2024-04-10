@@ -25,11 +25,9 @@ setup(
         'console_scripts': [
         'stream = video_stream.video_stream:main',
         'facedetection = video_stream.face_detect:main',
-        'dnnface = video_stream.dnnface:main',
         'pattlite= video_stream.pattlite:main',
-        'rafdb_ddamfn= video_stream.rafdb_ddamfn:main',
         'rafdb_single= video_stream.rafdb_single:main',
-        'test_batch= video_stream.batch_test:main',
+        'facetracking=video_stream.pred_facetracking:main'
         ],
     },
 )
