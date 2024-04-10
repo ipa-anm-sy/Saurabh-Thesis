@@ -26,9 +26,7 @@ class FaceDetectionNode(Node):
 
         qos_profile = QoSProfile(depth=10)
         self.image_sub = self.create_subscription(sensor_msgs.Image, '/image_raw', self.detect_face_callback, qos_profile=qos_profile)
-       
         self.bridge = CvBridge()
-
         model_dir= "/home/server/ros2_ws/src/video_stream/video_stream"
         self.caffemodel = os.path.join(model_dir, "res10_300x300_ssd_iter_140000.caffemodel")
         self.prototxt = os.path.join(model_dir, "deploy.prototxt.txt")
@@ -40,34 +38,22 @@ class FaceDetectionNode(Node):
         self.checkpoint= torch.load(self.model_path, map_location=self.device)
         self.model.load_state_dict(self.checkpoint['model_state_dict'])
         self.model.to(self.device)
-
         self.frame_count = 0
         self.start_time = time.time()
 
-    def detect_face_callback(self, image):
-        try:
-            frame = self.bridge.imgmsg_to_cv2(image, "bgr8")
-        except Exception as e:
-            self.get_logger().error(f"error converting image:{e}")
-            return
-        
+    def detect_face_callback(self, image): 
+        frame = self.bridge.imgmsg_to_cv2(image, "bgr8")
         self.frame_count += 1
-        
         faces,cropped_faces = self.detect_and_crop_face(frame)
-
         for i, (startX, startY, endX, endY) in enumerate(faces):
             face_img= cropped_faces[i]
             label = self.get_expression_label(face_img)
-            
-            cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2)  
-            
+            cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2)    
             cv2.putText(frame, label, (startX, startY - 10),
-            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
-
+            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 4)
         fps_text = f"Model FPS: {self.update_fps()}"
+        frame=cv2.resize(frame,(1280,720),1)
         cv2.putText(frame, fps_text, (frame.shape[1] - 150, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
-
         cv2.imshow('Detected Faces', frame)
        
         cv2.waitKey(1)
@@ -77,11 +63,9 @@ class FaceDetectionNode(Node):
 
     def detect_and_crop_face(self, image):
         (h, w) = image.shape[:2]
-        blob = cv2.dnn.blobFromImage(cv2.resize(image, (300, 300)), 1.0, (300, 300), (104.0, 177.0, 123.0))
-
+        blob = cv2.dnn.blobFromImage(cv2.resize(image, (1280,720)), 1.0, (300, 300), (104.0, 177.0, 123.0)) # image, resizing pixel dimentions, scaling factor, blob size, normalization parameters.
         self.net.setInput(blob)
         detections = self.net.forward()
-
         faces = []
         cropped_faces = []
         for i in range(0, detections.shape[2]):
@@ -90,13 +74,10 @@ class FaceDetectionNode(Node):
             if confidence > 0.7:  
                 box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
                 (startX, startY, endX, endY) = box.astype("int")
-
                 face_roi = image[startY:endY, startX:endX]
                 faces.append((startX, startY, endX, endY))
                 cropped_faces.append(face_roi)
-                cv2.rectangle(image, (startX, startY), (endX, endY), (0, 255, 0), 2)
-
-
+    
         return faces, cropped_faces
     
 
@@ -109,18 +90,12 @@ class FaceDetectionNode(Node):
         return round(fps, 2)
     
     def get_expression_label(self, image):
-        
-     
-        self.model.eval()
-
-           
+        self.model.eval()   
         preprocess = transforms.Compose([
-                transforms.Resize((112,112)), 
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ])
-        
-        
+                     transforms.Resize((112,112)), 
+                     transforms.ToTensor(),
+                     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                     ])
         face_img = Image.fromarray(image)
         face_img = preprocess(face_img)
         face_img = face_img.unsqueeze(0)  
@@ -129,16 +104,9 @@ class FaceDetectionNode(Node):
         with torch.no_grad():
             output = self.model(face_img)
 
-        
         if isinstance(output, tuple):
-        
             output = output[0] 
-            
-
         _, predicted = torch.max(output, 1)
-
-        
-
         expression_label = self.class_labels[predicted.item()]
 
         return expression_label
