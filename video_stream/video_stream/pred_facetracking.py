@@ -1,5 +1,4 @@
 import os
-import sys
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
@@ -25,12 +24,13 @@ class FaceDetectionNode(Node):
         qos_profile = QoSProfile(depth=10)
         self.image_sub = self.create_subscription(sensor_msgs.Image, '/image_raw', self.detect_face_callback, qos_profile=qos_profile)
         self.bridge = CvBridge()
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model_dir= "/home/server/ros2_ws/src/video_stream/video_stream"
         self.caffemodel = os.path.join(model_dir, "res10_300x300_ssd_iter_140000.caffemodel")
         self.prototxt = os.path.join(model_dir, "deploy.prototxt.txt")
         self.net = cv2.dnn.readNetFromCaffe(self.prototxt, self.caffemodel)
         self.tracker_path="/home/server/ros2_ws/src/deep_sort/deep/checkpoint/ckpt.t7"
-        self.tracker= DeepSort(model_path=self.tracker_path,max_age=30)
+        self.tracker= DeepSort(model_path=self.tracker_path,max_age=30,use_cuda=True)
         self.class_labels = ['Surprise','Fear', 'Disgust','Happy', 'Sad', 'Angry', 'Neutral']  
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model_path = "/home/server/ros2_ws/src/video_stream/video_stream/rafdb_8830.pth"
@@ -53,7 +53,7 @@ class FaceDetectionNode(Node):
             cv2.putText(frame, label, (startX, startY - 30),
             cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
         fps_text = f"Model FPS: {self.update_fps()}"
-        frame=cv2.resize(frame,(1280,720),1)
+        #frame=cv2.resize(frame,(1280,720),1)
         cv2.putText(frame, fps_text, (frame.shape[1] - 150, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
         cv2.imshow('Detected Faces', frame)   
         cv2.waitKey(1)
@@ -61,7 +61,7 @@ class FaceDetectionNode(Node):
 
     def detect_and_crop_face(self, image):
         (h, w) = image.shape[:2]
-        blob = cv2.dnn.blobFromImage(cv2.resize(image, (1920,1080)), 1.0, (300, 300), (104.0, 177.0, 123.0)) # image, resizing pixel dimentions, scaling factor, blob size, normalization parameters.
+        blob = cv2.dnn.blobFromImage(cv2.resize(image, (300,300)), 1.0, (300, 300), (104.0, 177.0, 123.0)) # image, resizing pixel dimentions, scaling factor, blob size, normalization parameters.
         self.net.setInput(blob)
         detections = self.net.forward()
         faces = []
@@ -71,7 +71,7 @@ class FaceDetectionNode(Node):
             confidences=[]
             for i in range(0, detections.shape[2]):
                 confidence = detections[0, 0, i, 2]
-                if confidence > 0.8:  
+                if confidence > 0.7:  
                     box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
                     (startX, startY, endX, endY) = box.astype("int")
                     bboxes_xyxy.append([startX, startY, endX, endY])

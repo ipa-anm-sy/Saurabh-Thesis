@@ -27,7 +27,10 @@ setup(
         'facedetection = video_stream.face_detect:main',
         'pattlite= video_stream.pattlite:main',
         'rafdb_single= video_stream.rafdb_single:main',
-        'facetracking=video_stream.pred_facetracking:main'
+        'facetracking=video_stream.pred_facetracking:main',
+        'yolopredict=video_stream.yolo_emo_pred:main',
+        'yoloface=video_stream.yoloface:main',
+        'yolotrack=video_stream.yolotrack:main',
         ],
     },
 )

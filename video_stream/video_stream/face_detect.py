@@ -46,8 +46,6 @@ class FaceDetectionNode(Node):
         return faces, cropped_faces
 
 
-        return face_roi
-
 def main(args=None):
     rclpy.init(args=args)
     node = FaceDetectionNode()
