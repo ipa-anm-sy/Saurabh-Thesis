@@ -9,3 +9,5 @@ usb_cam
 deep_sort
 *.mp4
 video_stream/videos
+emotions.txt
+video_stream/video_stream/emotions.txt
