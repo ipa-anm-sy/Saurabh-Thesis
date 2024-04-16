@@ -23,14 +23,15 @@ class FaceDetectionNode(Node):
     def __init__(self):
         super().__init__('face_detection')
 
-        qos_profile = QoSProfile(depth=10)
-        self.image_sub = self.create_subscription(sensor_msgs.Image, '/image_raw', self.detect_face_callback, qos_profile=qos_profile)
+        self.qos_profile = QoSProfile(depth=10)
+        self.image_sub = self.create_subscription(sensor_msgs.Image, '/image_raw', self.detect_face_callback, qos_profile=self.qos_profile)
         self.bridge = CvBridge()
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.facemodel_path="/home/server/ros2_ws/src/video_stream/video_stream/yolov8m-face.pt"
         self.facemodel=YOLO(self.facemodel_path).to(self.device)
-        self.class_labels = ['Surprise','Fear', 'Disgust','Happy', 'Sad', 'Angry', 'Neutral']  
-        self.model_path = "/home/server/ros2_ws/src/video_stream/video_stream/rafdb_8830.pth"
+        #self.class_labels = ['Surprise','Fear','Disgust','Happy','Sad','Angry','Neutral']  # class with my trained models
+        self.class_labels = ['Neutral','Happy','Sad','Surprise','Fear','Disgust','Angry']   # class with pre trained model (rafdb_8617.pth)
+        self.model_path = "/home/server/ros2_ws/src/video_stream/video_stream/rafdb_8617.pth"
         self.model = DDAMNet(num_class=7,num_head=2,pretrained=False)
         self.checkpoint= torch.load(self.model_path, map_location=self.device)
         self.model.load_state_dict(self.checkpoint['model_state_dict'])
@@ -38,23 +39,29 @@ class FaceDetectionNode(Node):
         self.names = self.facemodel.model.names
         self.track_history = defaultdict(list)
         self.frame_count = 0
+        self.frame_number = 0
         self.start_time = time.time()
 
 
     def detect_face_callback(self, image):   
-        frame = self.bridge.imgmsg_to_cv2(image, "bgr8")
+        frame = self.bridge.imgmsg_to_cv2(image, "bgr8") 
         self.frame_count += 1
-        self.detect_and_crop_face(frame)
-        cv2.waitKey(1)
+        self.frame_number+=1
+        frames,fps_text=self.detect_and_crop_face(frame)
+        for frame in (frames): 
+            cv2.putText(frame, fps_text, (frame.shape[1] - 150, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)  
+            cv2.imshow('Detected Faces', frame)
+            cv2.waitKey(1)
 
 
     def detect_and_crop_face(self, image):
         faces=[]
         cropped_faces=[]
         results = self.facemodel.track(image, persist=True)
+        frames=[]
+        track_ids=[]
         if results[0].boxes.id is not None:
             boxes = results[0].boxes.xyxy.cpu()
-            
             track_ids = results[0].boxes.id.int().cpu().tolist()
             clss = results[0].boxes.cls.cpu().tolist()
             for box, track_id, cls in zip(boxes, track_ids, clss):
@@ -70,10 +77,7 @@ class FaceDetectionNode(Node):
                 label = self.get_expression_label(face_roi)
                 cv2.putText(image, label, (x1, y1- 30),
                 cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
-                
-                fps_text = f"Model FPS: {self.update_fps()}"
-                cv2.putText(image, fps_text, (image.shape[1] - 150, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
-                
+                 
                 bbox_center = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2  # Bbox center
                 cv2.putText(image, f'id: {track_id}', (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
                 
@@ -82,11 +86,15 @@ class FaceDetectionNode(Node):
                 if len(track) > 100:
                     track.pop(0)
                
-                
                 cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2) 
-                cv2.imshow('Detected Faces', image) 
-               
-        return faces, cropped_faces
+                
+                frames.append(image)
+                f=open("emotions.txt","a+")
+                f.write("face_id="+str(track_id)+", Expression= "+str(label)+ ", Frame number= "+ str(self.frame_number) +"\n")
+                f.close()
+        fps_text = f"Model FPS: {self.update_fps()}"
+             
+        return frames,fps_text
 
     def update_fps(self):
         end_time = time.time()

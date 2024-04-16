@@ -31,6 +31,7 @@ setup(
         'yolopredict=video_stream.yolo_emo_pred:main',
         'yoloface=video_stream.yoloface:main',
         'yolotrack=video_stream.yolotrack:main',
+        
         ],
     },
 )
