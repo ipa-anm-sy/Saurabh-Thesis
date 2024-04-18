@@ -11,14 +11,13 @@ from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import itertools
 
-
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--fer_path', type=str, default='/home/server/ros2_ws/src/DDAMFN/ferplus/Labels', help='ferPlus dataset path.')
-    parser.add_argument('--batch_size', type=int, default=32, help='Batch size.')
+    parser.add_argument('--fer_path', type=str, default='/data/ferPlus/', help='ferPlus dataset path.')
+    parser.add_argument('--batch_size', type=int, default=128, help='Batch size.')
     parser.add_argument('--workers', default=8, type=int, help='Number of data loading workers.')
     parser.add_argument('--num_head', type=int, default=2, help='Number of attention head.')
-    parser.add_argument('--model_path', default = 'checkpoints/ferPlus_epoch45_acc0.6923_bacc0.6789.pth')
+    parser.add_argument('--model_path', default = './checkpoints/ferPlus.pth')
     return parser.parse_args()
 
                
@@ -74,7 +73,7 @@ def run_test():
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])])   
   
-    val_dataset = datasets.ImageFolder(f'{args.fer_path}/FER2013Test', transform = data_transforms_val)    
+    val_dataset = datasets.ImageFolder(f'{args.fer_path}/test', transform = data_transforms_val)    
 
     print('Validation set size:', val_dataset.__len__())
     

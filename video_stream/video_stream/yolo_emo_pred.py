@@ -14,9 +14,10 @@ import time
 import sys
 from shapely.geometry import Polygon
 from shapely.geometry.point import Point
-sys.path.append("/home/server/ros2_ws/src")
-from DDAMFN.networks.DDAM import DDAMNet
 from collections import defaultdict
+sys.path.append("/home/server/ros2_ws/src/DDAMFN/DDAMFN++")
+from networks.DDAM import DDAMNet
+
 
 
 class FaceDetectionNode(Node):
@@ -89,8 +90,8 @@ class FaceDetectionNode(Node):
                 cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2) 
                 
                 frames.append(image)
-                f=open("emotions.txt","a+")
-                f.write("face_id="+str(track_id)+", Expression= "+str(label)+ ", Frame number= "+ str(self.frame_number) +"\n")
+                f=open("/home/server/ros2_ws/src/video_stream/video_stream/emotions.txt","a+")
+                f.write(str(track_id)+","+str(label)+ ","+str(self.frame_number) +"\n")
                 f.close()
         fps_text = f"Model FPS: {self.update_fps()}"
              

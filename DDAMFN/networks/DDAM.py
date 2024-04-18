@@ -1,7 +1,5 @@
 from torch import nn
 import torch
-import sys
-sys.path.append("/home/server/ros2_ws/src/DDAMFN")
 from networks import MixedFeatureNet
 from torch.nn import Module
 import os
