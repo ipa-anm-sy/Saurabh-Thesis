@@ -30,9 +30,9 @@ class FaceDetectionNode(Node):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.facemodel_path="/home/server/ros2_ws/src/video_stream/video_stream/yolov8m-face.pt"
         self.facemodel=YOLO(self.facemodel_path).to(self.device)
-        #self.class_labels = ['Surprise','Fear','Disgust','Happy','Sad','Angry','Neutral']  # class with my trained models
-        self.class_labels = ['Neutral','Happy','Sad','Surprise','Fear','Disgust','Angry']   # class with pre trained model (rafdb_8617.pth)
-        self.model_path = "/home/server/ros2_ws/src/video_stream/video_stream/rafdb_8617.pth"
+        self.class_labels = ['Surprise','Fear','Disgust','Happy','Sad','Angry','Neutral']  # class with other trained models
+        #self.class_labels = ['Neutral','Happy','Sad','Surprise','Fear','Disgust','Angry']   # class with pre trained model (rafdb_8617.pth)
+        self.model_path = "/home/server/ros2_ws/src/video_stream/video_stream/rafdb_8980.pth"
         self.model = DDAMNet(num_class=7,num_head=2,pretrained=False)
         self.checkpoint= torch.load(self.model_path, map_location=self.device)
         self.model.load_state_dict(self.checkpoint['model_state_dict'])
