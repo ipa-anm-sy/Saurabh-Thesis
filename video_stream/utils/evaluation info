@@ -1,0 +1,54 @@
+Evaluation parameters:
+- Weather condition: Sunny, Rainy
+- Temperature:
+- Humidity:
+- Lighting condition: (illumination measurement if the device is available to measure)
+- Environment Scenario in detail: sidewalk near a mainroad, park, outside a grocery store main door, city center.
+
+- Human robot interaction scenario: delivering some type of object to the human.
+	- Robot description: size, speed, colour
+	- Robot task description: object avoidance, delivery of package
+	- Robot task reliability: Highly reliable, medium reliable, less reliable, unreliable
+	
+- Camera description
+	- Image size and quality
+	- FPS rate of the camera
+	
+- Computer for FER implementation
+	- Confidence for face detection:
+	- Face tracking (length of track history):
+	- confidence for expression detection:
+	- filter conditions for obtained data. 
+	
+- FER
+	- Accuracy of the model
+	- period for which same emotion is detected continuosly (fear, disgust is observed then is it observed for 1sec, 2 sec / for 20 frames, 40 frames) 
+	- reasoning for the observed emotion.
+	
+- Questionnare (cross-verification of continuosly observed emotions, its grade)
+- Pedestrians's opinion about the acceptance of the robot (reliability level)
+
+==> parameters obtained should be common for robots with wide range of applications so that recommendation for perceived safety can be given.
+  	(parameters which I think would be common for many robots)
+  	
+   -- size of the robot
+   -- motion behaviour of robot (steady, predictable/ unsteady, unpredictable) (Can human understand what robot is doing, where it wants to go just by looking at it)
+   -- parameters of the robot depending on the task (Human avoidance):- 
+   	-side by side passing distance between robot and human
+   	-approaching speed of robot towards human (1.5m/s, 1m/s, 0.5m/s) 
+   	-distance before which robot changes trajectory (2m, 1m ,0.5m)		
+   -reliability of the robot.
+   
+(Goal after the experiments)
+==> Should be able to plot curve for a type of robot.
+	Reliability vs emotions
+	parameter vs emotions
+	
+	deduction of acceptance of the robot from emotions
+	
+	acceptability vs reliability
+	acceptability vs parameters.
+
+	
+   	
+   		

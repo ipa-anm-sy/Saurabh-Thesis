@@ -16,8 +16,10 @@ class video_stream(Node):
     def video_stream_callback(self,image):
         
         cv_image = self.br.imgmsg_to_cv2(image, "bgr8")
+        #cv_image = cv2.resize(cv_image,(1280,720))
         cv2.imshow("video", cv_image)
         cv2.waitKey(1)
+        
     
 def main(args=None):
         rclpy.init(args=args)

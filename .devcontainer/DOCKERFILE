@@ -25,6 +25,8 @@ RUN pip install --no-cache-dir --upgrade tqdm
 RUN pip install --no-cache-dir --upgrade Pillow
 RUN pip install --no-cache-dir --upgrade tensorrt
 RUN pip install --no-cache-dir --upgrade easydict
+RUN pip install --upgrade ultralytics
+RUN pip install shapely
 ENV SHELL /bin/bash
 RUN echo "export DISPLAY=unix:0" >> /etc/bash.bashrc
 
