@@ -22,6 +22,7 @@ import sys
 from shapely.geometry import Polygon
 from shapely.geometry.point import Point
 from collections import defaultdict
+# sys.path.append("video_strea/video_stream/DDAMFN/DDAMFN++")
 sys.path.append("/home/server/ros2_ws/src/DDAMFN/DDAMFN++")
 from networks.DDAM import DDAMNet
 
@@ -39,7 +40,7 @@ class FaceDetectionNode(Node):
         
         self.qos_profile = QoSProfile(depth=10)
         #self.image_sub = self.create_subscription(sensor_msgs.Image, '/image_raw', self.detect_face_callback, qos_profile=self.qos_profile)
-        #self.msg_sub=self.create_subscription(std_msgs.String,'/current_state',self.write_robot_state,10)
+       
         
         self.image_sub = Subscriber(self,sensor_msgs.Image, "/image_raw", qos_profile=self.qos_profile)
         self.msg_sub=Subscriber(self,std_msgs.String, "/current_state", qos_profile=10)
@@ -69,7 +70,6 @@ class FaceDetectionNode(Node):
         
     def write_exp_info(self):
         file=open("/home/server/ros2_ws/src/video_stream/video_stream/emotions.txt","a+")
-    
         fmt = "%Y-%m-%d %H:%M:%S %Z%z"
         zone = 'Europe/Berlin'
         now_time = datetime.now(timezone(zone))  
@@ -140,7 +140,7 @@ class FaceDetectionNode(Node):
                 bbox_center = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2  # Bbox center
                 cv2.putText(image, f'id: {track_id}', (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
                 
-                track = self.track_history[track_id]  # Tracking Lines plot
+                track = self.track_history[track_id]  
                 track.append((float(bbox_center[0]), float(bbox_center[1])))
                 if len(track) > 100:
                     track.pop(0)
@@ -157,12 +157,7 @@ class FaceDetectionNode(Node):
     
     
 
-    # def write_robot_state(self, msg):
-    #     msg=msg.data
-    #     f=open("/home/server/ros2_ws/src/video_stream/video_stream/emotions.txt","a+")
-    #     f.write(str(msg)+"\n")
-    #     f.close()
-        
+    
         
     def update_fps(self):
         end_time = time.time()

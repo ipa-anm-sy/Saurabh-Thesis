@@ -4,6 +4,7 @@ from setuptools import find_packages, setup
 
 package_name = 'video_stream'
 
+
 setup(
     name=package_name,
     version='0.0.0',
